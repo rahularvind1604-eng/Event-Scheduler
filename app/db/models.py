@@ -1,38 +1,78 @@
+"""
+Database models for EventPilot.
+
+These models define the core domain entities:
+- Company (client / tenant)
+- User (admin / organizer / attendee)
+- Event (3-day conference or exhibition)
+- EventRoom (rooms available per event)
+
+Design principles:
+- Explicit relationships
+- Clear ownership boundaries
+- Database-level constraints for data integrity
+"""
+
 from datetime import date
-from sqlalchemy import (Boolean,CheckConstraint,Integer,String,Date,Column,ForeignKey,PrimaryKeyConstraint,UniqueConstraint)
+
+from sqlalchemy import (
+    Boolean,
+    CheckConstraint,
+    Column,
+    Date,
+    ForeignKey,
+    Integer,
+    String,
+    UniqueConstraint,
+)
 from sqlalchemy.orm import relationship
+
 from app.db.base import Base
 
 
 class Company(Base):
     """
     Represents a client (tenant) using the system.
+    Example: Samsung, Google, Amazon.
 
     A company owns:
     - users
     - events
     """
+
     __tablename__ = "companies"
-    
+
     # Primary key
     id = Column(Integer, primary_key=True)
-    # Company name msut be unique accross the system
+
+    # Company name must be unique across the system
     name = Column(String(200), nullable=False, unique=True, index=True)
-    # Relation back to user and Event. (One to Many relationships)
-    users = relationship("User", back_populates="company", cascade="all, delete-orphan")
-    events = relationship("Event", back_populates="company", cascade="all, delete-orphan")
+
+    # One-to-many relationships
+    users = relationship(
+        "User",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
+    events = relationship(
+        "Event",
+        back_populates="company",
+        cascade="all, delete-orphan",
+    )
 
 
 class User(Base):
     """
-    Represents a user belonging to a company
-    Roles:
-    -admin: manages compnies, events, rooms
-    -organizer: schedules and manages meetings
-    -attendees: participants in meetings
+    Represents a user belonging to a company.
 
-    Email is unique per company (multi-tenant safe)
+    Roles:
+    - admin: manages companies, events, rooms
+    - organizer: schedules and manages meetings
+    - attendee: participates in meetings
+
+    Email is unique per company (multi-tenant safe).
     """
+
     __tablename__ = "users"
 
     # Primary key
